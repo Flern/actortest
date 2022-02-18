@@ -65,6 +65,35 @@
             "problemMatcher": []
         },
         {
+            "label": "cleanup-kube-environment",
+            "command": "${command:extension.vsMinikubeStop}",
+            "problemMatcher": [],
+            "dependsOn": [
+                "remove-dapr"
+            ]
+        },
+        {
+            "label": "remove-dapr",
+            "type": "shell",
+            "command": "dapr",
+            "args": [
+                "uninstall",
+                "-k"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "forward-ports",
+            "type": "shell",
+            "command": "kubectl",
+            "args": [
+                "port-forward",
+                "svc/actortest",
+                "5000:80"
+            ],
+            "problemMatcher": []
+        },
+        {
             "label": "docker build",
             "type": "shell",
             "command": "eval",

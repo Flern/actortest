@@ -1,5 +1,11 @@
 #! /bin/bash
 
+# Check for dapr install
+if [ ! -f /usr/local/bin/dapr ]; then
+        echo "Dapr CLI not detected.  Installing now.  Requires 'sudo' privilege."
+        sudo wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash
+fi
+
 # Check for kubectl
 if [ ! -f /usr/bin/kubectl ] && [ ! -f /usr/local/bin/kubectl ]; then
         echo "kubectl not detected. Installing now.  Requires 'sudo' privilege."
