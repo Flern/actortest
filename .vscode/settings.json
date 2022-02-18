@@ -1,0 +1,13 @@
+{
+    "vs-kubernetes": {
+        "vs-kubernetes.nodejs-autodetect-remote-root": true,
+        "vs-kubernetes.dotnet-source-file-map": "/"
+    },
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "bash",
+            "icon": "terminal-bash",
+            "args": ["--init-file","${workspaceFolder}/scripts/shell.sh"]
+        }
+    }
+}

@@ -1,0 +1,97 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                // Ask dotnet build to generate full paths for file names.
+                "/property:GenerateFullPaths=true",
+                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+                "/consoleloggerparameters:NoSummary",
+                "${workspaceFolder}/src/actortest.csproj"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "appId": "actortest",
+            "appPort": 5000,
+            "httpPort": 3500,
+            "label": "daprd-debug-dotnet",
+            "type": "dapr"
+        },
+        {
+            "appId": "actortest",
+            "label": "daprd-down-dotnet",
+            "type": "daprd-down"
+        },
+        {
+            "label": "start-kube-environment",
+            "type": "shell",
+            "command" : "./dapr-init.sh",
+            "options": {
+                "cwd": "${workspaceFolder}/scripts"
+            },
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "check-dependencies",
+                "start-minikube"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "start-minikube",
+            "command": "${command:extension.vsMinikubeStart}",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always"
+            }
+        },
+        {
+            "label": "check-dependencies",
+            "type":"shell",
+            "command": "./check-dependencies.sh",
+            "options": {
+                "cwd": "${workspaceFolder}/scripts"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "docker build",
+            "type": "shell",
+            "command": "eval",
+            "args": [
+                "$(",
+                "minikube",
+                "docker-env",
+                ")",
+                "&&",
+                "docker",
+                "build",
+                "-t",
+                "actortest",
+                "."
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "COMPOSE_DOCKER_CLI_BUILD": "1",
+                    "DOCKER_BUILDKIT": "1"
+                },
+                "cwd": "${workspaceFolder}/src"
+            }
+        }
+    ]
+}

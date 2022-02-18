@@ -1,0 +1,162 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: actorsecrets
+type: Opaque
+data:
+  redisPassword: ZSRoMHAwbkRAcHI=
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: redis
+  labels:
+    app: actortest
+    service: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: redis
+  template:
+    metadata:
+      labels:
+        app: actortest
+        service: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:alpine
+        imagePullPolicy: IfNotPresent
+        args:
+          - "--requirepass e$h0p0nD@pr"
+        ports:
+          - name: http
+            containerPort: 6379
+            protocol: TCP
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis
+  labels:
+    app: actortest
+    service: redis
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: redis
+  selector:
+    service: redis
+
+---
+
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: dapr-config
+
+---
+
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+  - name: redisHost
+    value: redis:6379
+  - name: redisPassword
+    secretKeyRef:
+      name: actorsecrets
+      key: redisPassword
+  - name: actorStateStore
+    value: "true"
+auth:
+  secretStore: kubernetes
+
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: actortest-cm
+  labels:
+    app: actortest
+    service: actortest
+data:
+  ASPNETCORE_ENVIRONMENT: Development
+  OrchestratorType: K8S
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: actortest
+  labels:
+    app: actortest
+    service: actortest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: actortest
+  template:
+    metadata:
+      labels:
+        app: actortest
+        service: actortest
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "actortest"
+        dapr.io/app-port: "80"
+        dapr.io/config: "dapr-config"
+        dapr.io/sidecar-liveness-probe-delay-seconds: "120"
+        dapr.io/log-level: "debug"
+    spec:
+      containers:
+        - name: actortest
+          image: actortest:latest
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: actortest-cm
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: actortest
+  labels:
+    app: actortest
+    service: actortest
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    - port: 3500
+      targetPort: 3500
+      protocol: TCP
+      name: dapr-http
+    - port: 50001
+      targetPort: 50001
+      protocol: TCP
+      name: dapr-grpc
+  selector:
+    service: actortest
